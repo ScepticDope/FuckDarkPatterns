@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
 // @version      1.0
-// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, 5 seconds arrow key scrubbing and position jumping via the 0–9 keys.
+// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
 // @match        *://www.youtube.com/embed/*
 // @run-at       document-idle
 // ==/UserScript==
@@ -256,5 +256,13 @@
       },
       true,
     );
+
+    // Use Shift + < or > to decrease or increase playback speed.
+    window.addEventListener("keydown", function (e) {
+      if (e.key !== "<" && e.key !== ">") return;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      video.playbackRate = Math.min(2, Math.max(0.25, Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100));
+    }, true);
   }
 })();
