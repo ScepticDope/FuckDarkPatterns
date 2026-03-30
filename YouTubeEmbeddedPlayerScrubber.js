@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
 // @version      1.0
-// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds play/pause, full-screen buttons and a volume slider.
+// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, 5 seconds arrow key scrubbing and position jumping via the 0–9 keys.
 // @match        *://www.youtube.com/embed/*
 // @run-at       document-idle
 // ==/UserScript==
@@ -223,5 +223,38 @@
 
     // Add all elements.
     document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+
+    // Set arrow key scrubbing to 5 seconds.
+    window.addEventListener(
+      "keydown",
+      function (e) {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+        e.stopImmediatePropagation();
+        e.preventDefault();
+
+        if (e.key === "ArrowLeft") {
+          video.currentTime -= 5;
+        } else {
+          video.currentTime += 5;
+        }
+      },
+      true,
+    );
+
+    // Make numbers 0-9 jump to % time in video.
+    window.addEventListener(
+      "keydown",
+      function (e) {
+        if (!/^[0-9]$/.test(e.key)) return;
+
+        e.stopImmediatePropagation();
+        e.preventDefault();
+
+        const percentage = parseInt(e.key) / 10;
+        video.currentTime = video.duration * percentage;
+      },
+      true,
+    );
   }
 })();
