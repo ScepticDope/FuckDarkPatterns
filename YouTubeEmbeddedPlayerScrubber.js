@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
-// @version      1.0
+// @version      1.1
 // @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
 // @match        *://www.youtube.com/embed/*
+// @match        *://www.youtube-nocookie.com/embed/*
 // @run-at       document-idle
 // ==/UserScript==
 
