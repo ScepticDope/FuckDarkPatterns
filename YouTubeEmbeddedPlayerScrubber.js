@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
 // @version      1.1
-// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
+// @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, volume control by arrow keys, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
 // @match        *://www.youtube.com/embed/*
 // @match        *://www.youtube-nocookie.com/embed/*
 // @run-at       document-idle
@@ -216,10 +216,30 @@
       video.muted = v === 0;
     });
 
+    // Volume control by arrow keys.
+    window.addEventListener(
+      "keydown",
+      function (e) {
+        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        const v = Math.min(
+          1,
+          Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
+        );
+        video.muted = false;
+        video.volume = v;
+      },
+      true,
+    );
+
     // Update slider and mute icon.
     video.addEventListener("volumechange", () => {
       muteBtn.classList.toggle("muted", video.muted);
       vol.value = video.muted ? 0 : video.volume;
+
+      // Fix for edgecases where user is spamming volume controls using different features and mute messes up.
+      video.muted = v === 0;
     });
 
     // Add all elements.
