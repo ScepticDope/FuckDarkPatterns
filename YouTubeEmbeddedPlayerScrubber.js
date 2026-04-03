@@ -20,7 +20,8 @@
           }
 
           #ytc-pp,
-          #ytc-fs {
+          #ytc-fs,
+          #ytc-speed {
             z-index: 9999;
             position: fixed;
 
@@ -134,6 +135,30 @@
           #ytc-vol::-moz-focus-outer {
             border: 0;
           }
+
+          #ytc-speed {
+            left: 124px;
+
+            font-size: 12px;
+            cursor: default;
+          }
+
+          #ytc-pp.ytc-visible,
+          #ytc-fs.ytc-visible,
+          #ytc-mute.ytc-visible,
+          #ytc-vol.ytc-visible,
+          #ytc-speed.ytc-visible {
+            opacity: 1;
+          }
+
+          #ytc-pp,
+          #ytc-fs,
+          #ytc-mute,
+          #ytc-vol,
+          #ytc-speed {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+          }
         `,
       }),
     );
@@ -223,6 +248,7 @@
         if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
         e.stopImmediatePropagation();
         e.preventDefault();
+        showControls();
         const v = Math.min(
           1,
           Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
@@ -242,8 +268,40 @@
       video.muted = v === 0;
     });
 
+    // Playback speed display.
+    const speedDisplay = Object.assign(document.createElement("span"), {
+      id: "ytc-speed",
+      textContent: video.playbackRate.toFixed(2) + "x",
+    });
+
+    video.addEventListener("ratechange", () => {
+      speedDisplay.textContent = video.playbackRate.toFixed(2) + "x";
+    });
+
+    // Auto-hide controls logic.
+    const controls = [ppBtn, fsBtn, muteBtn, vol, speedDisplay];
+    let hideTimeout = null;
+
+    function showControls() {
+      controls.forEach((el) => el.classList.add("ytc-visible"));
+      resetHideTimer();
+    }
+
+    function hideControls() {
+      controls.forEach((el) => el.classList.remove("ytc-visible"));
+    }
+
+    function resetHideTimer() {
+      if (hideTimeout) clearTimeout(hideTimeout);
+      hideTimeout = setTimeout(hideControls, 5000);
+    }
+
+    // Show on mouse enter/move.
+    document.body.addEventListener("mouseenter", showControls);
+    document.body.addEventListener("mousemove", showControls);
+
     // Add all elements.
-    document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+    document.body.prepend(fsBtn, vol, muteBtn, speedDisplay, ppBtn);
 
     // Set arrow key scrubbing to 5 seconds.
     window.addEventListener(
@@ -253,6 +311,7 @@
 
         e.stopImmediatePropagation();
         e.preventDefault();
+        showControls();
 
         if (e.key === "ArrowLeft") {
           video.currentTime -= 5;
@@ -271,6 +330,7 @@
 
         e.stopImmediatePropagation();
         e.preventDefault();
+        showControls();
 
         const percentage = parseInt(e.key) / 10;
         video.currentTime = video.duration * percentage;
@@ -283,6 +343,7 @@
       if (e.key !== "<" && e.key !== ">") return;
       e.stopImmediatePropagation();
       e.preventDefault();
+      showControls();
       video.playbackRate = Math.min(2, Math.max(0.25, Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100));
     }, true);
   }
