@@ -163,8 +163,12 @@
       textContent: "⛶",
     });
     fsBtn.addEventListener("click", () => {
-      const player = document.getElementById("player");
-      (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        const player = document.getElementById("player");
+        (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      }
     });
 
     // Fix double click fullscreen.
@@ -243,7 +247,16 @@
     });
 
     // Add all elements.
-    document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+    function fullscreenchangeHandler() {
+      [fsBtn, vol, muteBtn, ppBtn].forEach((el) => el.remove());
+      if (document.fullscreenElement) {
+        document.querySelector(".html5-video-player").prepend(fsBtn, vol, muteBtn, ppBtn);
+      } else {
+        document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+      }
+    }
+    document.addEventListener("fullscreenchange", fullscreenchangeHandler);
+    fullscreenchangeHandler();
 
     // Set arrow key scrubbing to 5 seconds.
     window.addEventListener(
