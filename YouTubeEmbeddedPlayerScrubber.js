@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
-// @version      1.1
+// @version      1.2
 // @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, volume control by arrow keys, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
 // @match        *://www.youtube.com/embed/*
 // @match        *://www.youtube-nocookie.com/embed/*
@@ -178,19 +178,51 @@
       }
     });
 
-    // Mute button.
+    // Mute button and shortcut functionality with (edgecase) fixes.
+    let lastVolume = video.volume || 1;
+
     const muteBtn = Object.assign(document.createElement("button"), {
       id: "ytc-mute",
     });
 
-    muteBtn.addEventListener("click", () => {
-      video.muted = !video.muted;
-      muteBtn.classList.toggle("muted", video.muted);
-    });
+    let userMuted = false;
+    const toggleMute = () => {
+      if (video.muted || video.volume === 0) {
+        userMuted = false;
 
-    video.addEventListener("volumechange", () => {
-      muteBtn.classList.toggle("muted", video.muted);
-    });
+        video.muted = false;
+        video.volume = lastVolume > 0 ? lastVolume : 1;
+      } else {
+        lastVolume = video.volume;
+        userMuted = true;
+
+        video.muted = true;
+        video.volume = 0;
+      }
+    };
+
+    muteBtn.addEventListener("click", toggleMute);
+
+    const preventYouTubeMute = (e) => {
+      if (e.key.toLowerCase() === "m") {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+      }
+    };
+
+    window.addEventListener("keyup", preventYouTubeMute, true);
+    window.addEventListener("keypress", preventYouTubeMute, true);
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key.toLowerCase() === "m") {
+          preventYouTubeMute(e);
+          toggleMute();
+        }
+      },
+      true,
+    );
 
     // Volume slider.
     const vol = Object.assign(document.createElement("input"), {
@@ -219,7 +251,7 @@
     // Volume control by arrow keys.
     window.addEventListener(
       "keydown",
-      function (e) {
+      (e) => {
         if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
         e.stopImmediatePropagation();
         e.preventDefault();
@@ -233,13 +265,33 @@
       true,
     );
 
-    // Update slider and mute icon.
+    // Update slider, mute icon and lastVolume.
     video.addEventListener("volumechange", () => {
-      muteBtn.classList.toggle("muted", video.muted);
+      // This resolves the issue of YouTube randomly increasing the volume to 1.
+      if (video.volume === 1 && userMuted) {
+        // Edgecase fix for when watching muted for whole video.
+        console.log("GOTCHA TOO BITCH!");
+
+        toggleMute();
+        return;
+      }
+      if (video.volume === 1 && lastVolume < 1 && lastVolume < 0.95) {
+        // Left this debug console.log so users can see YouTube is responsible for the volume spike nonsense and when it is prevented by this script.
+        console.log("GOTCHA BITCH");
+
+        video.volume = lastVolume;
+        return;
+      }
+
+      muteBtn.classList.toggle("muted", video.muted || !video.volume);
       vol.value = video.muted ? 0 : video.volume;
 
+      if (video.volume > 0) {
+        lastVolume = video.volume;
+      }
+
       // Fix for edgecases where user is spamming volume controls using different features and mute messes up.
-      video.muted = v === 0;
+      video.muted = vol.value === 0;
     });
 
     // Add all elements.
@@ -248,7 +300,7 @@
     // Set arrow key scrubbing to 5 seconds.
     window.addEventListener(
       "keydown",
-      function (e) {
+      (e) => {
         if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
 
         e.stopImmediatePropagation();
@@ -266,7 +318,7 @@
     // Make numbers 0-9 jump to % time in video.
     window.addEventListener(
       "keydown",
-      function (e) {
+      (e) => {
         if (!/^[0-9]$/.test(e.key)) return;
 
         e.stopImmediatePropagation();
@@ -279,11 +331,21 @@
     );
 
     // Use Shift + < or > to decrease or increase playback speed.
-    window.addEventListener("keydown", function (e) {
-      if (e.key !== "<" && e.key !== ">") return;
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      video.playbackRate = Math.min(2, Math.max(0.25, Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100));
-    }, true);
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "<" && e.key !== ">") return;
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        video.playbackRate = Math.min(
+          2,
+          Math.max(
+            0.25,
+            Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100,
+          ),
+        );
+      },
+      true,
+    );
   }
 })();
