@@ -134,6 +134,30 @@
           #ytc-vol::-moz-focus-outer {
             border: 0;
           }
+
+          #ytc-custom-menu {
+            z-index: 9999;
+            position: fixed;
+
+            display: none;
+            padding: 4px 0;
+
+            color: white;
+            font-size: 13px;
+            background: rgba(28, 28, 28, 0.95);
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            cursor: default;
+            user-select: none;
+          }
+
+          .ytc-menu-item {
+            padding: 7px 14px;
+          }
+
+          .ytc-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
         `,
       }),
     );
@@ -370,5 +394,75 @@
       },
       true,
     );
+
+    // Custom context menu.
+    const menu = Object.assign(document.createElement("div"), { id: "ytc-custom-menu" });
+    document.body.appendChild(menu);
+
+    const copyVideoUrl = (withTime) => {
+      const videoId =
+        new URLSearchParams(window.location.search).get("v") ||
+        window.location.pathname.split("/").pop();
+
+      const shareLink = `https://www.youtube.com/watch?v=${videoId}${withTime ? `&t=${Math.floor(video.currentTime)}s` : ""}`;
+
+      navigator.clipboard.writeText(shareLink);
+    };
+
+    const addContextMenuItem = (text, onClick) => {
+      const cmItem = Object.assign(document.createElement("div"), {
+        className: "ytc-menu-item",
+        textContent: text,
+      });
+
+      cmItem.addEventListener("click", () => {
+        onClick();
+        toggleContextMenu(false);
+      });
+
+      menu.appendChild(cmItem);
+    };
+
+    const toggleContextMenu = (visible, e) => {
+      if (visible) {
+        menu.style.display = "block";
+
+        // Set the position ensuring the context menu stays within the iframe bounds.
+        let posX = e.clientX;
+        if (posX + menu.offsetWidth > window.innerWidth) {
+          posX = window.innerWidth - menu.offsetWidth - 10;
+        }
+
+        let posY = e.clientY;
+        if (posY + menu.offsetHeight > window.innerHeight) {
+          posY = window.innerHeight - menu.offsetHeight - 10;
+        }
+
+        menu.style.left = `${posX}px`;
+        menu.style.top = `${posY}px`;
+      } else {
+        menu.style.display = "none";
+      }
+    };
+
+    addContextMenuItem("Copy video URL", () => copyVideoUrl(false));
+    addContextMenuItem("Copy video URL at current time", () => copyVideoUrl(true));
+
+    // Show context menu.
+    document.addEventListener(
+      "contextmenu",
+      (e) => {
+        e.preventDefault();
+        toggleContextMenu(true, e);
+      },
+      true,
+    );
+
+    // Hide context menu when clicking outside of it.
+    document.addEventListener("pointerdown", (e) => {
+      if (!menu.contains(e.target)) {
+        toggleContextMenu(false);
+      }
+    });
   }
 })();

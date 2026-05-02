@@ -13,7 +13,7 @@ This script patches over the now borked UI and restores controls and functionali
 
 ### Features.
 
-_Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, volume control by arrow keys, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys, jump to beginning/end via home/end keys and Shift + < or > to control playback speed._
+_Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, volume control by arrow keys, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys, jump to beginning/end via home/end keys, Shift + < or > to control playback speed and custom context menu with video URL copy functionality._
 
 ### Requirements.
 
