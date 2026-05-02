@@ -242,6 +242,7 @@
     // Mouse wheel volume.
     vol.addEventListener("wheel", (e) => {
       e.preventDefault();
+
       const delta = e.deltaY > 0 ? -0.05 : 0.05;
       const v = Math.min(1, Math.max(0, video.volume + delta));
       video.volume = v;
@@ -253,8 +254,10 @@
       "keydown",
       (e) => {
         if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+
         e.stopImmediatePropagation();
         e.preventDefault();
+
         const v = Math.min(
           1,
           Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
@@ -330,13 +333,33 @@
       true,
     );
 
+    // Use Home and End keys to jump to beginning and end of video.
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "Home" && e.key !== "End") return;
+
+        e.stopImmediatePropagation();
+        e.preventDefault();
+
+        if (e.key === "Home") {
+          video.currentTime = 0;
+        } else {
+          video.currentTime = video.duration;
+        }
+      },
+      true,
+    );
+
     // Use Shift + < or > to decrease or increase playback speed.
     window.addEventListener(
       "keydown",
       (e) => {
         if (e.key !== "<" && e.key !== ">") return;
+
         e.stopImmediatePropagation();
         e.preventDefault();
+
         video.playbackRate = Math.min(
           2,
           Math.max(
