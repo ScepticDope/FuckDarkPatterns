@@ -187,8 +187,12 @@
       textContent: "⛶",
     });
     fsBtn.addEventListener("click", () => {
-      const player = document.getElementById("player");
-      (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        const player = document.getElementById("player");
+        (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      }
     });
 
     // Fix double click fullscreen.
@@ -322,7 +326,67 @@
     });
 
     // Add all elements.
-    document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+    function fullscreenchangeHandler() {
+      [fsBtn, vol, muteBtn, ppBtn].forEach((el) => el.remove());
+      if (document.fullscreenElement) {
+        document.querySelector(".html5-video-player").prepend(fsBtn, vol, muteBtn, ppBtn);
+      } else {
+        document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
+      }
+    }
+    document.addEventListener("fullscreenchange", fullscreenchangeHandler);
+    fullscreenchangeHandler();
+
+    // Helper function to set visibility of all controls.
+    function setControlsVisibility(visibility) {
+      [fsBtn, vol, muteBtn, ppBtn].forEach((el) => {
+        el.style.visibility = visibility;
+      });
+    }
+
+    // Show and hide elements in sync with YouTube's controls.
+    const controlsObserver = new MutationObserver(() => {
+      if (document.fullscreenElement) {
+        return;
+      }
+      const visibility = getComputedStyle(document.querySelector(".player-controls-content")).visibility;
+      setControlsVisibility(visibility);
+    });
+
+    // Activate the observer when .player-controls is added to the DOM
+    if (document.querySelector(".player-control-overlay")) {
+      controlsObserver.observe(document.querySelector(".player-control-overlay"), {
+        attributes: true,
+      });
+    } else {
+      const playerControlsObserver = new MutationObserver(() => {
+        if (document.getElementById("player-control-overlay")) {
+          playerControlsObserver.disconnect();
+          controlsObserver.observe(document.getElementById("player-control-overlay"), {
+            attributes: true,
+          });
+        }
+      });
+      playerControlsObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Show controls on mouse movement in fullscreen.
+    let mousemoveTimeout;
+    window.addEventListener("mousemove", () => {
+      if (!document.fullscreenElement) {
+        return;
+      }
+      clearTimeout(mousemoveTimeout);
+      setControlsVisibility("visible");
+      mousemoveTimeout = setTimeout(() => {
+        if (document.fullscreenElement) {
+          setControlsVisibility("hidden");
+        }
+      }, 2500);
+    });
 
     // Set arrow key scrubbing to 5 seconds.
     window.addEventListener(
