@@ -10,6 +10,9 @@
 (() => {
   "use strict";
 
+  // Set to true if you want to keep all controls in fullscreen mode.
+  const showControlsFullscreen = false;
+
   // Only run when an abnormal player is detected.
   if (!document.querySelector(".ytp-play-button")) {
     document.head.appendChild(
@@ -181,26 +184,50 @@
       ppBtn.style.paddingLeft = "1.5px";
     });
 
+    // Custom fullscreen toggle.
+    const toggleFullscreen = () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen?.();
+
+        return;
+      }
+
+      if (showControlsFullscreen) {
+        document.documentElement.requestFullscreen();
+      } else {
+        const player = document.getElementById("player");
+
+        (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      }
+    };
+
     // Fullscreen button.
     const fsBtn = Object.assign(document.createElement("button"), {
       id: "ytc-fs",
       textContent: "⛶",
     });
     fsBtn.addEventListener("click", () => {
-      const player = document.getElementById("player");
-      (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+      toggleFullscreen();
     });
 
     // Fix double click fullscreen.
     document.body.addEventListener("dblclick", () => {
-      const player = document.getElementById("player");
-
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.();
-      } else {
-        (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
-      }
+      toggleFullscreen();
     });
+
+    // Toggle fullscreen with F.
+    window.addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key !== "f") return;
+
+        e.stopImmediatePropagation();
+        e.preventDefault();
+
+        toggleFullscreen();
+      },
+      true,
+    );
 
     // Mute button and shortcut functionality with (edgecase) fixes.
     let lastVolume = video.volume || 1;
