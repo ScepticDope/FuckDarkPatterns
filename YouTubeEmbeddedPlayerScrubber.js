@@ -13,11 +13,14 @@
   // Set to true if you want to keep all controls in fullscreen mode.
   const showControlsFullscreen = false;
 
-  // Only run when an abnormal player is detected.
-  if (!document.querySelector(".ytp-play-button")) {
-    document.head.appendChild(
-      Object.assign(document.createElement("style"), {
-        textContent: `
+  window.requestIdleCallback(runScript);
+
+  function runScript() {
+    // Only run when an abnormal player is detected.
+    if (!document.querySelector(".ytp-play-button")) {
+      document.head.appendChild(
+        Object.assign(document.createElement("style"), {
+          textContent: `
           player-fullscreen-action-menu {
             display: none !important;
           }
@@ -162,334 +165,335 @@
             background: rgba(255, 255, 255, 0.1);
           }
         `,
-      }),
-    );
+        }),
+      );
 
-    // Play/pause button.
-    const ppBtn = Object.assign(document.createElement("button"), {
-      id: "ytc-pp",
-      textContent: "❚❚",
-    });
-    ppBtn.addEventListener("click", () =>
-      document.querySelector(".player-control-play-pause-icon")?.click(),
-    );
+      // Play/pause button.
+      const ppBtn = Object.assign(document.createElement("button"), {
+        id: "ytc-pp",
+        textContent: "❚❚",
+      });
+      ppBtn.addEventListener("click", () =>
+        document.querySelector(".player-control-play-pause-icon")?.click(),
+      );
 
-    const video = document.querySelector("video");
-    video.addEventListener("play", () => {
-      ppBtn.textContent = "❚❚";
-      ppBtn.style.paddingLeft = "0";
-    });
-    video.addEventListener("pause", () => {
-      ppBtn.textContent = "▶";
-      ppBtn.style.paddingLeft = "1.5px";
-    });
+      const video = document.querySelector("video");
+      video.addEventListener("play", () => {
+        ppBtn.textContent = "❚❚";
+        ppBtn.style.paddingLeft = "0";
+      });
+      video.addEventListener("pause", () => {
+        ppBtn.textContent = "▶";
+        ppBtn.style.paddingLeft = "1.5px";
+      });
 
-    // Custom fullscreen toggle.
-    const toggleFullscreen = () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen?.();
+      // Custom fullscreen toggle.
+      const toggleFullscreen = () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen?.();
 
-        return;
-      }
+          return;
+        }
 
-      if (showControlsFullscreen) {
-        document.documentElement.requestFullscreen();
-      } else {
-        const player = document.getElementById("player");
+        if (showControlsFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else {
+          const player = document.getElementById("player");
 
-        (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
-      }
-    };
+          (player.requestFullscreen ?? player.webkitRequestFullscreen)?.call(player);
+        }
+      };
 
-    // Fullscreen button.
-    const fsBtn = Object.assign(document.createElement("button"), {
-      id: "ytc-fs",
-      textContent: "⛶",
-    });
-    fsBtn.addEventListener("click", () => {
-      toggleFullscreen();
-    });
-
-    // Fix double click fullscreen.
-    document.body.addEventListener("dblclick", () => {
-      toggleFullscreen();
-    });
-
-    // Toggle fullscreen with F.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key !== "f") return;
-
-        e.stopImmediatePropagation();
-        e.preventDefault();
-
+      // Fullscreen button.
+      const fsBtn = Object.assign(document.createElement("button"), {
+        id: "ytc-fs",
+        textContent: "⛶",
+      });
+      fsBtn.addEventListener("click", () => {
         toggleFullscreen();
-      },
-      true,
-    );
+      });
 
-    // Mute button and shortcut functionality with (edgecase) fixes.
-    let lastVolume = video.volume || 1;
+      // Fix double click fullscreen.
+      document.body.addEventListener("dblclick", () => {
+        toggleFullscreen();
+      });
 
-    const muteBtn = Object.assign(document.createElement("button"), {
-      id: "ytc-mute",
-    });
+      // Toggle fullscreen with F.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "f") return;
 
-    let userMuted = false;
-    const toggleMute = () => {
-      if (video.muted || video.volume === 0) {
-        userMuted = false;
+          e.stopImmediatePropagation();
+          e.preventDefault();
 
-        video.muted = false;
-        video.volume = lastVolume > 0 ? lastVolume : 1;
-      } else {
-        lastVolume = video.volume;
-        userMuted = true;
+          toggleFullscreen();
+        },
+        true,
+      );
 
-        video.muted = true;
-        video.volume = 0;
-      }
-    };
+      // Mute button and shortcut functionality with (edgecase) fixes.
+      let lastVolume = video.volume || 1;
 
-    muteBtn.addEventListener("click", toggleMute);
+      const muteBtn = Object.assign(document.createElement("button"), {
+        id: "ytc-mute",
+      });
 
-    const preventYouTubeMute = (e) => {
-      if (e.key.toLowerCase() === "m") {
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-      }
-    };
+      let userMuted = false;
+      const toggleMute = () => {
+        if (video.muted || video.volume === 0) {
+          userMuted = false;
 
-    window.addEventListener("keyup", preventYouTubeMute, true);
-    window.addEventListener("keypress", preventYouTubeMute, true);
-    window.addEventListener(
-      "keydown",
-      (e) => {
+          video.muted = false;
+          video.volume = lastVolume > 0 ? lastVolume : 1;
+        } else {
+          lastVolume = video.volume;
+          userMuted = true;
+
+          video.muted = true;
+          video.volume = 0;
+        }
+      };
+
+      muteBtn.addEventListener("click", toggleMute);
+
+      const preventYouTubeMute = (e) => {
         if (e.key.toLowerCase() === "m") {
-          preventYouTubeMute(e);
-          toggleMute();
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
         }
-      },
-      true,
-    );
+      };
 
-    // Volume slider.
-    const vol = Object.assign(document.createElement("input"), {
-      id: "ytc-vol",
-      type: "range",
-      min: 0,
-      max: 1,
-      step: 0.01,
-      value: video.volume,
-    });
+      window.addEventListener("keyup", preventYouTubeMute, true);
+      window.addEventListener("keypress", preventYouTubeMute, true);
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key.toLowerCase() === "m") {
+            preventYouTubeMute(e);
+            toggleMute();
+          }
+        },
+        true,
+      );
 
-    vol.addEventListener("input", () => {
-      video.volume = vol.value;
-      video.muted = vol.value == 0;
-    });
+      // Volume slider.
+      const vol = Object.assign(document.createElement("input"), {
+        id: "ytc-vol",
+        type: "range",
+        min: 0,
+        max: 1,
+        step: 0.01,
+        value: video.volume,
+      });
 
-    // Mouse wheel volume.
-    vol.addEventListener("wheel", (e) => {
-      e.preventDefault();
+      vol.addEventListener("input", () => {
+        video.volume = vol.value;
+        video.muted = vol.value == 0;
+      });
 
-      const delta = e.deltaY > 0 ? -0.05 : 0.05;
-      const v = Math.min(1, Math.max(0, video.volume + delta));
-      video.volume = v;
-      video.muted = v === 0;
-    });
-
-    // Volume control by arrow keys.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
-
-        e.stopImmediatePropagation();
+      // Mouse wheel volume.
+      vol.addEventListener("wheel", (e) => {
         e.preventDefault();
 
-        const v = Math.min(
-          1,
-          Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
-        );
-        video.muted = false;
+        const delta = e.deltaY > 0 ? -0.05 : 0.05;
+        const v = Math.min(1, Math.max(0, video.volume + delta));
         video.volume = v;
-      },
-      true,
-    );
-
-    // Update slider, mute icon and lastVolume.
-    video.addEventListener("volumechange", () => {
-      // This resolves the issue of YouTube randomly increasing the volume to 1.
-      if (video.volume === 1 && userMuted) {
-        // Edgecase fix for when watching muted for whole video.
-        console.log("GOTCHA TOO BITCH!");
-
-        toggleMute();
-        return;
-      }
-      if (video.volume === 1 && lastVolume < 1 && lastVolume < 0.95) {
-        // Left this debug console.log so users can see YouTube is responsible for the volume spike nonsense and when it is prevented by this script.
-        console.log("GOTCHA BITCH");
-
-        video.volume = lastVolume;
-        return;
-      }
-
-      muteBtn.classList.toggle("muted", video.muted || !video.volume);
-      vol.value = video.muted ? 0 : video.volume;
-
-      if (video.volume > 0) {
-        lastVolume = video.volume;
-      }
-
-      // Fix for edgecases where user is spamming volume controls using different features and mute messes up.
-      video.muted = vol.value === 0;
-    });
-
-    // Add all elements.
-    document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
-
-    // Set arrow key scrubbing to 5 seconds.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-
-        e.stopImmediatePropagation();
-        e.preventDefault();
-
-        if (e.key === "ArrowLeft") {
-          video.currentTime -= 5;
-        } else {
-          video.currentTime += 5;
-        }
-      },
-      true,
-    );
-
-    // Make numbers 0-9 jump to % time in video.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (!/^[0-9]$/.test(e.key)) return;
-
-        e.stopImmediatePropagation();
-        e.preventDefault();
-
-        const percentage = parseInt(e.key) / 10;
-        video.currentTime = video.duration * percentage;
-      },
-      true,
-    );
-
-    // Use Home and End keys to jump to beginning and end of video.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key !== "Home" && e.key !== "End") return;
-
-        e.stopImmediatePropagation();
-        e.preventDefault();
-
-        if (e.key === "Home") {
-          video.currentTime = 0;
-        } else {
-          video.currentTime = video.duration;
-        }
-      },
-      true,
-    );
-
-    // Use Shift + < or > to decrease or increase playback speed.
-    window.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key !== "<" && e.key !== ">") return;
-
-        e.stopImmediatePropagation();
-        e.preventDefault();
-
-        video.playbackRate = Math.min(
-          2,
-          Math.max(
-            0.25,
-            Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100,
-          ),
-        );
-      },
-      true,
-    );
-
-    // Custom context menu.
-    const menu = Object.assign(document.createElement("div"), { id: "ytc-custom-menu" });
-    document.body.appendChild(menu);
-
-    const copyVideoUrl = (withTime) => {
-      const videoId =
-        new URLSearchParams(window.location.search).get("v") ||
-        window.location.pathname.split("/").pop();
-
-      const shareLink = `https://www.youtube.com/watch?v=${videoId}${withTime ? `&t=${Math.floor(video.currentTime)}s` : ""}`;
-
-      navigator.clipboard.writeText(shareLink);
-    };
-
-    const addContextMenuItem = (text, onClick) => {
-      const cmItem = Object.assign(document.createElement("div"), {
-        className: "ytc-menu-item",
-        textContent: text,
+        video.muted = v === 0;
       });
 
-      cmItem.addEventListener("click", () => {
-        onClick();
-        toggleContextMenu(false);
+      // Volume control by arrow keys.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          const v = Math.min(
+            1,
+            Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
+          );
+          video.muted = false;
+          video.volume = v;
+        },
+        true,
+      );
+
+      // Update slider, mute icon and lastVolume.
+      video.addEventListener("volumechange", () => {
+        // This resolves the issue of YouTube randomly increasing the volume to 1.
+        if (video.volume === 1 && userMuted) {
+          // Edgecase fix for when watching muted for whole video.
+          console.log("GOTCHA TOO BITCH!");
+
+          toggleMute();
+          return;
+        }
+        if (video.volume === 1 && lastVolume < 1 && lastVolume < 0.95) {
+          // Left this debug console.log so users can see YouTube is responsible for the volume spike nonsense and when it is prevented by this script.
+          console.log("GOTCHA BITCH");
+
+          video.volume = lastVolume;
+          return;
+        }
+
+        muteBtn.classList.toggle("muted", video.muted || !video.volume);
+        vol.value = video.muted ? 0 : video.volume;
+
+        if (video.volume > 0) {
+          lastVolume = video.volume;
+        }
+
+        // Fix for edgecases where user is spamming volume controls using different features and mute messes up.
+        video.muted = vol.value === 0;
       });
 
-      menu.appendChild(cmItem);
-    };
+      // Add all elements.
+      document.body.prepend(fsBtn, vol, muteBtn, ppBtn);
 
-    const toggleContextMenu = (visible, e) => {
-      if (visible) {
-        menu.style.display = "block";
+      // Set arrow key scrubbing to 5 seconds.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
 
-        // Set the position ensuring the context menu stays within the iframe bounds.
-        let posX = e.clientX;
-        if (posX + menu.offsetWidth > window.innerWidth) {
-          posX = window.innerWidth - menu.offsetWidth - 10;
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          if (e.key === "ArrowLeft") {
+            video.currentTime -= 5;
+          } else {
+            video.currentTime += 5;
+          }
+        },
+        true,
+      );
+
+      // Make numbers 0-9 jump to % time in video.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (!/^[0-9]$/.test(e.key)) return;
+
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          const percentage = parseInt(e.key) / 10;
+          video.currentTime = video.duration * percentage;
+        },
+        true,
+      );
+
+      // Use Home and End keys to jump to beginning and end of video.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "Home" && e.key !== "End") return;
+
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          if (e.key === "Home") {
+            video.currentTime = 0;
+          } else {
+            video.currentTime = video.duration;
+          }
+        },
+        true,
+      );
+
+      // Use Shift + < or > to decrease or increase playback speed.
+      window.addEventListener(
+        "keydown",
+        (e) => {
+          if (e.key !== "<" && e.key !== ">") return;
+
+          e.stopImmediatePropagation();
+          e.preventDefault();
+
+          video.playbackRate = Math.min(
+            2,
+            Math.max(
+              0.25,
+              Math.round((video.playbackRate + (e.key === ">" ? 0.25 : -0.25)) * 100) / 100,
+            ),
+          );
+        },
+        true,
+      );
+
+      // Custom context menu.
+      const menu = Object.assign(document.createElement("div"), { id: "ytc-custom-menu" });
+      document.body.appendChild(menu);
+
+      const copyVideoUrl = (withTime) => {
+        const videoId =
+          new URLSearchParams(window.location.search).get("v") ||
+          window.location.pathname.split("/").pop();
+
+        const shareLink = `https://www.youtube.com/watch?v=${videoId}${withTime ? `&t=${Math.floor(video.currentTime)}s` : ""}`;
+
+        navigator.clipboard.writeText(shareLink);
+      };
+
+      const addContextMenuItem = (text, onClick) => {
+        const cmItem = Object.assign(document.createElement("div"), {
+          className: "ytc-menu-item",
+          textContent: text,
+        });
+
+        cmItem.addEventListener("click", () => {
+          onClick();
+          toggleContextMenu(false);
+        });
+
+        menu.appendChild(cmItem);
+      };
+
+      const toggleContextMenu = (visible, e) => {
+        if (visible) {
+          menu.style.display = "block";
+
+          // Set the position ensuring the context menu stays within the iframe bounds.
+          let posX = e.clientX;
+          if (posX + menu.offsetWidth > window.innerWidth) {
+            posX = window.innerWidth - menu.offsetWidth - 10;
+          }
+
+          let posY = e.clientY;
+          if (posY + menu.offsetHeight > window.innerHeight) {
+            posY = window.innerHeight - menu.offsetHeight - 10;
+          }
+
+          menu.style.left = `${posX}px`;
+          menu.style.top = `${posY}px`;
+        } else {
+          menu.style.display = "none";
         }
+      };
 
-        let posY = e.clientY;
-        if (posY + menu.offsetHeight > window.innerHeight) {
-          posY = window.innerHeight - menu.offsetHeight - 10;
+      addContextMenuItem("Copy video URL", () => copyVideoUrl(false));
+      addContextMenuItem("Copy video URL at current time", () => copyVideoUrl(true));
+
+      // Show context menu.
+      document.addEventListener(
+        "contextmenu",
+        (e) => {
+          e.preventDefault();
+          toggleContextMenu(true, e);
+        },
+        true,
+      );
+
+      // Hide context menu when clicking outside of it.
+      document.addEventListener("pointerdown", (e) => {
+        if (!menu.contains(e.target)) {
+          toggleContextMenu(false);
         }
-
-        menu.style.left = `${posX}px`;
-        menu.style.top = `${posY}px`;
-      } else {
-        menu.style.display = "none";
-      }
-    };
-
-    addContextMenuItem("Copy video URL", () => copyVideoUrl(false));
-    addContextMenuItem("Copy video URL at current time", () => copyVideoUrl(true));
-
-    // Show context menu.
-    document.addEventListener(
-      "contextmenu",
-      (e) => {
-        e.preventDefault();
-        toggleContextMenu(true, e);
-      },
-      true,
-    );
-
-    // Hide context menu when clicking outside of it.
-    document.addEventListener("pointerdown", (e) => {
-      if (!menu.contains(e.target)) {
-        toggleContextMenu(false);
-      }
-    });
+      });
+    }
   }
 })();
