@@ -245,7 +245,7 @@
           userMuted = false;
 
           video.muted = false;
-          video.volume = lastVolume > 0 ? lastVolume : 1;
+          video.volume = lastVolume > 0 ? lastVolume : 0.99;
         } else {
           lastVolume = video.volume;
           userMuted = true;
@@ -283,7 +283,7 @@
         id: "ytc-vol",
         type: "range",
         min: 0,
-        max: 1,
+        max: 0.99,
         step: 0.01,
         value: video.volume,
       });
@@ -298,7 +298,7 @@
         e.preventDefault();
 
         const delta = e.deltaY > 0 ? -0.05 : 0.05;
-        const v = Math.min(1, Math.max(0, video.volume + delta));
+        const v = Math.min(0.99, Math.max(0, video.volume + delta));
         video.volume = v;
         video.muted = v === 0;
       });
@@ -343,9 +343,7 @@
         muteBtn.classList.toggle("muted", video.muted || !video.volume);
         vol.value = video.muted ? 0 : video.volume;
 
-        if (video.volume > 0) {
-          lastVolume = video.volume;
-        }
+        lastVolume = video.volume;
 
         // Fix for edgecases where user is spamming volume controls using different features and mute messes up.
         video.muted = vol.value === 0;
