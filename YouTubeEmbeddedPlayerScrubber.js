@@ -298,7 +298,11 @@
         e.preventDefault();
 
         const delta = e.deltaY > 0 ? -0.05 : 0.05;
-        const v = Math.min(0.99, Math.max(0, video.volume + delta));
+        let v = Math.min(0.99, Math.max(0, video.volume + delta));
+
+        // Make sure this is only 2 decimals for gotcha bitch 3 stuff.
+        v = v.toFixed(2);
+
         video.volume = v;
         video.muted = v === 0;
       });
@@ -312,11 +316,15 @@
           e.stopImmediatePropagation();
           e.preventDefault();
 
-          const v = Math.min(
+          let v = Math.min(
             1,
             Math.max(0, video.volume + (e.key === "ArrowUp" ? 0.05 : -0.05)),
           );
           video.muted = false;
+
+          // Make sure this is only 2 decimals for gotcha bitch 3 stuff.
+          v = v.toFixed(2);
+
           video.volume = v;
         },
         true,
@@ -324,6 +332,14 @@
 
       // Update slider, mute icon and lastVolume.
       video.addEventListener("volumechange", () => {
+        // This resolves the latest attempt to fuck over this script.
+        if ((String(video.volume).split(".")[1] || "").length > 2){
+            console.log("GOTCHA TOO BITCH 3");
+
+            video.volume = lastVolume;
+          return;
+        }
+
         // This resolves the issue of YouTube randomly increasing the volume to 1.
         if (video.volume === 1 && userMuted) {
           // Edgecase fix for when watching muted for whole video.
