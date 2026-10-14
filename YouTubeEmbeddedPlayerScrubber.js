@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name         YouTube Embedded Player Scrubber
 // @version      1.2
+// @website      https://github.com/ScepticDope/FuckDarkPatterns/
 // @description  Strips the dark pattern UX from the new YouTube embedded player, re-adds the play/pause, fullscreen and mute buttons, fullscreen via double-click, volume slider, volume control by arrow keys, 5 seconds arrow key scrubbing, position jumping via the 0–9 keys and Shift + < or > to control playback speed.
 // @match        *://www.youtube.com/embed/*
 // @match        *://www.youtube-nocookie.com/embed/*
